@@ -13,14 +13,20 @@ few importent points to be aware about
 ### write below command 
 "code ."
 
-### in VS Code open terminal 
-
+### Create .env file in both Backend and Frontend S
 give follwoing commands 
 ```
 cd Backend
 npm install
 node index.mjs
 ```
+
+in Frontend/.env - 
+```
+REACT_APP_BACKEND_URL=http://localhost:8082
+```
+
+### in VS Code open terminal 
 
 backend server would be started
 create a new terminal (do not cancel previous terminal)
