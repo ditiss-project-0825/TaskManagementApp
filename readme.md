@@ -28,6 +28,14 @@ REACT_APP_BACKEND_URL=http://localhost:8082
 
 ### in VS Code open terminal 
 
+to start backend 
+
+```
+cd Backend 
+npm install
+npm index.mjs
+```
+
 backend server would be started
 create a new terminal (do not cancel previous terminal)
 (moving to Frontend directory)
