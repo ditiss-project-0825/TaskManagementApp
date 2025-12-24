@@ -2,9 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "this is backend to handle APIs for TaskList project",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
-    "test": "justTest"
+    "start": "node index.mjs",
+    "smoke-test": "node scripts/smoke-test.mjs",
+    "test": "echo \"No Tests\""
   },
   "author": "chirayu humar",
   "license": "MIT",
