@@ -1,4 +1,5 @@
 import express from "express";
+import { DataApiClient } from 'rqlite-js';
 //requireing both sqlite and sqlite3 packages
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
@@ -16,6 +17,12 @@ const corsOptions = {
     credentials: true,
     optionsSuccessStatus: 200
 };
+
+const DB_VM_IP = '192.168.56.101'; 
+const rqliteUrl = `http://${DB_VM_IP}:4001`;
+
+// Initialize rqlite client
+const client = new DataApiClient(rqliteUrl);
 
 //setting path to database
 import path from 'path';
@@ -41,7 +48,27 @@ async function databaseSetup () {
     }
 }
 
-databaseSetup();
+async function commanDatabaseSetup() {
+    try {
+        // 1. Verify connectivity to the rqlite server on the Database VM
+        const status = await client.status();
+        console.log("Connected to rqlite server successfully");
+
+        // 2. Start the Express server
+        const port = process.env.SERVER_PORT || 3000;
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`Backend server listening on port ${port}`);
+        });
+
+    } catch (e) {
+        console.error("Database connection failed. Ensure rqlited is running on the DB VM.");
+        console.error("Error details:", e.message);
+        process.exit(1);
+    }
+}
+
+// databaseSetup();
+commanDatabaseSetup();
 
 const app = express();
 app.use(express.json())
@@ -67,7 +94,8 @@ app.get('/createTable', async (req, res) => {
         task_detail text,
         last_date date
     );`;
-    await db.exec(createTableQuery);
+    // await db.exec(createTableQuery);
+    await client.query(createTableQuery);
     console.log("table created successfully");
 });
 
@@ -76,17 +104,20 @@ app.post('/insertData', async (req, res) => {
     const insertDataQuery = `
     INSERT INTO Task (id, task_detail, last_date)
     VALUES( '${generatePassword()}', '${taskDetail}', '${lastDate}');`;
-    await db.exec(insertDataQuery);
+    // await db.exec(insertDataQuery);
+    await client.query(insertDataQuery);
     
     const bringAllQuery = `select * from Task order by last_date asc;`;
-    const data = await db.all(bringAllQuery);
+    // const data = await db.all(bringAllQuery);
+    const data = await client.query(bringAllQuery);
     const updatedData = convertSnakeCaseToCamalCase(data);
     res.json(updatedData);
 });
 
 app.get('/printTable', async (req, res) => {
     const bringAllQuery = `select * from Task order by last_date asc;`;
-    const data = await db.all(bringAllQuery);
+    // const data = await db.all(bringAllQuery);
+    const data = await client.query(bringAllQuery);
     const updatedData = convertSnakeCaseToCamalCase(data);
     res.json(updatedData);
 });
@@ -100,10 +131,12 @@ app.put('/change/task/:taskId', async (req, res) => {
             last_date = '${lastDate}'
         WHERE
             id = '${taskId}';`;
-    await db.run(updateTaskQuery);
+    // await db.run(updateTaskQuery);
+    await client.query(updateTaskQuery);
 
     const bringAllQuery = `select * from Task order by last_date asc;`;
-    const data = await db.all(bringAllQuery);
+    // const data = await db.all(bringAllQuery);
+    const data = await client.query(bringAllQuery);
     const updatedData = convertSnakeCaseToCamalCase(data);
     res.json(updatedData);
 });
@@ -113,10 +146,12 @@ app.delete('/delete/task/:taskId', async (req, res) => {
     const deleteTaskQuery = `
     DELETE FROM Task
     WHERE id = '${taskId}';`;
-    await db.run(deleteTaskQuery);
+    // await db.run(deleteTaskQuery);
+    await client.query(deleteTaskQuery);
 
     const bringAllQuery = `select * from Task order by last_date asc;`;
-    const data = await db.all(bringAllQuery);
+    // const data = await db.all(bringAllQuery);
+    const data = await client.query(bringAllQuery);
     const updatedData = convertSnakeCaseToCamalCase(data);
     res.json(updatedData);
 });
