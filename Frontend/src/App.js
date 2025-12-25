@@ -132,7 +132,8 @@ class App extends Component {
     }))
   }
 
-  formSubmited = () => {
+  formSubmited = (event) => {
+    if (event && event.preventDefault) event.preventDefault()
     const {isInUpdation} = this.state 
     if(isInUpdation){
       this.updateATask();

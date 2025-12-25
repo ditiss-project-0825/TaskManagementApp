@@ -19,11 +19,11 @@ const TaskElement = (props) => {
             <div className='combiner'>
                 <div>
                     {!isGettingEdited && <p>{lastDate}</p>}
-                    {isGettingEdited && <input value={lastDate} className='inside'/>}
+                    {isGettingEdited && <input value={lastDate} className='inside' readOnly />}
                 </div>
                 <div>
                     {!isGettingEdited && <p>{taskDetail}</p>}
-                    {isGettingEdited && <input value={taskDetail} className='inside'/>}
+                    {isGettingEdited && <input value={taskDetail} className='inside' readOnly />}
                 </div>
             </div>
             <div className='bottomDiv'>
