@@ -4,6 +4,7 @@
   "description": "this is backend to handle APIs for TaskList project",
   "main": "index.mjs",
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "start": "node index.mjs",
     "smoke-test": "node scripts/smoke-test.mjs",
     "test": "echo \"No Tests\""
@@ -12,11 +13,21 @@
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
-    "date-fns": "^2.30.0",
-    "dotenv": "^17.2.1",
-    "express": "^4.18.2",
-    "sqlite": "^4.2.1",
-    "sqlite3": "^5.1.6",
-    "uuid": "^9.0.0"
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "node-gyp": "^12.1.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "tar": "^7.5.4",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "npm-force-resolutions": "^0.0.10"
+  },
+  "resolutions": {
+    "tar": "7.5.4",
+    "node-gyp": "12.1.0",
+    "cacache": "20.0.3"
   }
 }
