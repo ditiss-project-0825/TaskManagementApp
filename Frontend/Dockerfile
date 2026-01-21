@@ -1,15 +1,17 @@
-FROM node:22-alpine
+# ---------- Build stage ----------
+FROM node:22-alpine AS build
+
 WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm ci
-
-# Copy source files
 COPY . .
+RUN npm run build
 
-# Expose port
-EXPOSE 3000
+# ---------- Runtime stage ----------
+FROM nginx:alpine
 
-# Start in development mode (not optimized for production)
-CMD npm start
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
