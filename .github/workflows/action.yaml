@@ -1,0 +1,20 @@
+name: Simple Pipeline
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Stage 1
+        run: echo "this is first stage"
+
+      - name: Stage 2
+        run: echo "this is second stage"
+
+      - name: Stage 3
+        run: echo "this is third stage"
