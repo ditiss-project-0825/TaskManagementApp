@@ -30,4 +30,4 @@ jobs:
         
       - name: Deployment
         # run: echo "this is seventh stage"
-        run: ip a
+        run: tracert google.com
