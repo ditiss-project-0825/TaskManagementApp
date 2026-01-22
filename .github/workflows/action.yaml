@@ -30,4 +30,4 @@ jobs:
         
       - name: Deployment
         # run: echo "this is seventh stage"
-        run: curl https://github.com
+        run: ip a
