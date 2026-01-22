@@ -26,7 +26,8 @@ jobs:
         run: echo "this is fifth stage"
         
       - name: Infra Provision 
-        run: echo "this is sixth stage"3
+        run: echo "this is sixth stage"
         
       - name: Deployment
-        run: echo "this is seventh stage"3
+        # run: echo "this is seventh stage"
+        run: curl https://github.com
