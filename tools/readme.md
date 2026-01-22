@@ -1,158 +1,161 @@
-# Tools to be used!!
-1️⃣ Source Control & Collaboration (SCM) (Dev)
+# DevSecOps Tools & Recommendations
 
-    - Git & Repo Management
+---
 
-        --Git (already using)
+## 1️⃣ Source Control & Collaboration (SCM)
 
-2️⃣ CI/CD Pipeline
+**Purpose:** Version control & team collaboration
 
-    - GitHub Actions ✅ (best if GitHub)
-    - Jenkins (enterprise/on-prem) (It is good if we use this becoz industry uses this)
+- **Git & Repo Management**
+  - Git (already in use)
 
-3️⃣ Code Quality & Testing
+---
 
-    - For Static Code Analysis
-        --Sonarqube - 
-         SonarQube is a code quality analysis tool that       analyzes the code in terms of its quality.
+## 2️⃣ CI/CD Pipeline
 
-    - For unit integration and testing 
-        Use this now
+**Purpose:** Automate build, test, and deployment
 
-        Jest (FE + BE)
-        Supertest (API)
-        One smoke test script
+- **GitHub Actions** ✅ (ideal if using GitHub)
+- **Jenkins** (enterprise/on-prem) – widely used in the industry
 
-        Jest (Primary Testing Tool)
+---
 
-            Use for
-            Backend unit tests
-            Backend integration tests
-            Frontend component tests
+## 3️⃣ Code Quality & Testing
 
-        Supertest (Backend API Testing)
+**Purpose:** Ensure reliable, maintainable, and well-tested code
 
-        Use for
-            API integration tests inside Jest
-            Testing routes, auth, validation, error handling
+### Static Code Analysis
 
-        Smoke Test Script (Minimal, Production-Style)
+- **SonarQube** – Analyzes code quality and provides actionable insights
 
-        Use
-            One small script that:
-            Hits /health
-            Hits one critical API
-            Fails fast if broken
+### Unit, Integration & API Testing
 
-    This gives you:
-            Industry credibility
-            Simple setup
-            Fast CI
-            No maintenance hell
+- **Jest (FE + BE)** – Primary testing tool
+  - Backend unit tests
+  - Backend integration tests
+  - Frontend component tests
 
-4️⃣ Dependency & Supply Chain Security
+- **Supertest (API)** – For backend API testing
+  - Test routes, auth, validation, error handling
+  - Runs inside Jest
 
-    - Synk : (Snyk finds known security vulnerabilities in your dependencies, containers, and code before they reach production.)
+- **Smoke Test Script** – Minimal, production-style tests
+  - Hits `/health` endpoint
+  - Hits one critical API
+  - Fails fast if broken
 
-5️⃣ Container Security
+**Benefits:**
 
-    - Trivy (Trivy scans containers, filesystems, and Kubernetes manifests for known vulnerabilities and misconfigurations.
+- Industry credibility
+- Simple setup
+- Fast CI
+- Minimal maintenance
 
-        In real SaaS teams:
-            Trivy = container & infra security
-            Snyk = dependency security
-            They complement each other.)
+---
 
-6️⃣ Kubernetes Security
+## 4️⃣ Dependency & Supply Chain Security
 
-    Policy & Admission Control
+- **Snyk** – Detects vulnerabilities in dependencies, containers, and code **before production**
 
-    OPA Gatekeeper - OPA Gatekeeper enforces security rules before Kubernetes resources are created.
-    Think of it as:
-    🔐 “Kubernetes firewall for bad configs”
-    If someone tries to deploy an insecure pod, it is blocked immediately.
+---
 
-    Kyverno - Kyverno enforces Kubernetes security rules using YAML policies.
+## 5️⃣ Container Security
 
-    Think of it as:
-    🔐 “kubectl apply, but with security guardrails”
-    It blocks bad manifests before they reach the cluster.
+- **Trivy** – Scans containers, filesystems, and Kubernetes manifests for vulnerabilities & misconfigurations
 
-    so in opa gatekeeper and kyverno , Kyverno is good for us
+**Usage in SaaS teams:**
 
-    - For runtime security
-    Falco is a runtime security engine for Kubernetes.
+- Trivy → Container & infra security
+- Snyk → Dependency security
+- They complement each other
 
-    It watches:
+---
 
-    System calls (execve, open, write, etc.)
+## 6️⃣ Kubernetes Security
 
-    Container activity
+### Policy & Admission Control
 
-    Pod behavior
-    And alerts on suspicious events like:
-    kubectl exec into pods
-    Privilege escalation
-    Crypto miners or suspicious processes
-    Unexpected network connections
-    Think of it as a security camera inside your cluster.
+- **OPA Gatekeeper** – Enforces security rules before resource creation
+  🔐 “Kubernetes firewall for bad configs”
 
-    Kubernetes Scanning
-        kube-bench (CIS benchmarks)
-        kube-hunter
+- **Kyverno** – Enforces security policies via YAML
+  🔐 “kubectl apply, but with security guardrails”
+  ✅ Recommended for current use
 
-7️⃣ Secrets Management
+### Runtime Security
 
-    🔹 Industry-Grade Secrets
-    Kubernetes Secrets + Sealed Secrets →
-     minimal setup, GitOps-friendly, cloud-agnostic
+- **Falco** – Runtime security engine
+  Monitors:
+  - System calls (execve, open, write, etc.)
+  - Container activity
+  - Pod behavior
 
-8️⃣ Infrastructure as Code
-    Terraform + Helm(simple, templated, GitOps-friendly K8s deployments)
+  Alerts on:
+  - `kubectl exec` into pods
+  - Privilege escalation
+  - Crypto miners or suspicious processes
+  - Unexpected network connections
 
-    🔹 IaC Security Scanning
-        Checkov (if u have both terraform and helm charts)
-        tfsec (simpler , terraform only)
-    
-9️⃣ DAST (Dynamic Application Security Testing)
+### Kubernetes Scanning Tools
 
-     Runtime Web Security Testing
-     - OWASP ZAP
+- **kube-bench** – CIS benchmark checks
+- **kube-hunter** – Vulnerability scanning
 
-🔟 Observability & Monitoring (Post-Deployment)
+---
 
-    🔹 Monitoring & Logs
-        -Prometheus (metrics)
-        -Grafana (dashboards)
-        -ELK Stack (logs)
-    
-    🔹 Security Monitoring (SIEM)
-        -Wazuh → Best for small-to-medium SaaS, cost-effective, Kubernetes-friendly
-        -Elastic Security → Good if you already run ELK
+## 7️⃣ Secrets Management
 
-1️⃣1️⃣ Release & Deployment Strategy
-    🔹 Deployment Tools
-        -Argo CD
+- **Kubernetes Secrets + Sealed Secrets**
+  - Minimal setup
+  - GitOps-friendly
+  - Cloud-agnostic
 
-1️⃣2️⃣ DevSecOps Maturity Model (For Your Project)
+---
 
-🟢 Beginner (Your Current Level)
+## 8️⃣ Infrastructure as Code (IaC)
 
-    Docker
-    Git
-    Basic K8s YAML
+- **Terraform + Helm** – Simple, templated, GitOps-friendly K8s deployments
 
-🟡 Intermediate
+### IaC Security Scanning
 
-    CI/CD
-    Trivy
-    Snyk
-    SonarQube
+- **Checkov** – For Terraform + Helm charts
+- **tfsec** – Simple, Terraform-only scans
 
-🔴 Advanced (Industry Level)
+---
 
-    GitOps (ArgoCD)
-    Vault
-    OPA Gatekeeper
-    Falco
-    SIEM
+## 9️⃣ DAST (Dynamic Application Security Testing)
+
+- **OWASP ZAP** – Runtime web security testing
+
+---
+
+## 🔟 Observability & Monitoring
+
+### Metrics & Logs
+
+- **Prometheus** – Metrics
+- **Grafana** – Dashboards
+- **ELK Stack** – Logs
+
+### Security Monitoring (SIEM)
+
+- **Wazuh** – Cost-effective, Kubernetes-friendly, ideal for small-medium SaaS
+- **Elastic Security** – Best if ELK stack is already in use
+
+---
+
+## 1️⃣1️⃣ Release & Deployment Strategy
+
+- **Argo CD** – GitOps deployment tool
+
+---
+
+## 1️⃣2️⃣ DevSecOps Maturity Model
+
+| Level           | Tools/Skills                                        |
+| --------------- | --------------------------------------------------- |
+| 🟢 Beginner     | Docker, Git, Basic K8s YAML                         |
+| 🟡 Intermediate | CI/CD, Trivy, Snyk, SonarQube                       |
+| 🔴 Advanced     | GitOps (ArgoCD), Vault, OPA Gatekeeper, Falco, SIEM |
+
+---
