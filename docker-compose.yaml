@@ -1,16 +1,21 @@
-version: "3.9"
-
 services:
   backend:
-    build: ./Backend
-    image: be
+    image: ${DOCKER_HUB_REPO}-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./Backend
+    restart: always
     ports:
       - "8082:8082"
 
   frontend:
-    build: ./Frontend
-    image: fe
+    image: ${DOCKER_HUB_REPO}-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./Frontend
+    restart: always
     ports:
       - "3000:3000"
     env_file: "./Frontend/.env"
-
+    environment:
+      - REACT_APP_BACKEND_URL=http://backend:8082
+    depends_on:
+      - backend
