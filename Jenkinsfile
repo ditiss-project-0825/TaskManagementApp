@@ -1,75 +1,91 @@
 pipeline {
     agent any
-    
+
     environment {
-        DOCKER_COMPOSE = 'docker compose'
-        PROJECT_NAME = 'tasklist-app'
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_HUB_REPO = "${DOCKERHUB_CREDENTIALS_USR}/${PROJECT_NAME}"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        BACKEND_IMAGE   = "someone15me/dp:backend"
+        FRONTEND_IMAGE  = "someone15me/dp:frontend"
+        DEPLOYMENT_NAME = "task-management-app"
+        K8S_NAMESPACE   = "task-management"
+        BUILD_TAG       = "${env.BUILD_NUMBER}-${GIT_COMMIT.substring(0,7)}"
     }
-    
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Checking out code from repository...'
                 checkout scm
             }
         }
-        
-        stage('Build with Docker Compose') {
+
+        stage('Build Docker Images') {
             steps {
-                echo 'Building images with docker-compose...'
-                sh '''
-                    docker compose build --no-cache
-                '''
+                sh "docker build -t ${BACKEND_IMAGE}-${BUILD_TAG} ./Backend"
+                sh "docker build -t ${FRONTEND_IMAGE}-${BUILD_TAG} ./Frontend"
             }
         }
-        
-        stage('Tag Images as latest') {
+
+        stage('Push Docker Images') {
             steps {
-                echo 'Tagging build images as latest...'
-                sh '''
-                    docker tag ${DOCKER_HUB_REPO}-backend:${IMAGE_TAG} ${DOCKER_HUB_REPO}-backend:latest
-                    docker tag ${DOCKER_HUB_REPO}-frontend:${IMAGE_TAG} ${DOCKER_HUB_REPO}-frontend:latest
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                        docker push ${BACKEND_IMAGE}-${BUILD_TAG}
+                        docker push ${FRONTEND_IMAGE}-${BUILD_TAG}
+                        docker logout
+                    """
+                }
             }
         }
-        
-        stage('Login to Docker Hub') {
+
+        stage('Deploy to Kubernetes') {
             steps {
-                echo "Logging in to Docker Hub as ${DOCKERHUB_CREDENTIALS_USR}..."
-                sh '''
-                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                '''
+                withCredentials([
+                    file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
+                ]) {
+                    sh """
+                        export KUBECONFIG=\$KUBECONFIG
+                        kubectl get nodes
+                        kubectl apply -f k8s/namespace.yaml
+                        kubectl apply -f k8s/deployment.yaml -n ${K8S_NAMESPACE}
+                        kubectl set image deployment/${DEPLOYMENT_NAME} \
+                            backend=${BACKEND_IMAGE}-${BUILD_TAG} \
+                            frontend=${FRONTEND_IMAGE}-${BUILD_TAG} \
+                            -n ${K8S_NAMESPACE}
+                        kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${K8S_NAMESPACE}
+                    """
+                }
             }
         }
-        
-        stage('Push Images to Docker Hub') {
+
+        stage('Verification') {
             steps {
-                echo 'Pushing images to Docker Hub...'
-                sh '''
-                    docker push ${DOCKER_HUB_REPO}-backend:${IMAGE_TAG}
-                    docker push ${DOCKER_HUB_REPO}-backend:latest
-                    docker push ${DOCKER_HUB_REPO}-frontend:${IMAGE_TAG}
-                    docker push ${DOCKER_HUB_REPO}-frontend:latest
-                '''
+                sleep(time: 1, unit: 'MINUTES')
+                sh "ip a"
+                withCredentials([
+                    file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
+                ]) {
+                    sh """
+                        export KUBECONFIG=\$KUBECONFIG
+                        kubectl get all -n ${K8S_NAMESPACE}
+                    """
+                }
             }
         }
     }
-    
+
     post {
         success {
-            echo 'Pipeline succeeded! Images built and containers started.'
+            echo "✅ Deployment completed with BUILD_TAG=${BUILD_TAG}"
+            echo "Done"
         }
         failure {
-            echo 'Pipeline failed! Check logs for details.'
-        }
-        always {
-            sh 'docker logout || true'
-            echo 'Cleaning up...'
-            // Optional: Remove old images to save space
-            // sh 'docker image prune -f'
+            echo "❌ Deployment failed!"
         }
     }
 }
