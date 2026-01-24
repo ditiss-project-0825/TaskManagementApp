@@ -1,17 +1,29 @@
-# ---------- Build stage ----------
-FROM node:22-alpine AS build
-
+# ---------- Stage 1: Build ----------
+FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+
+COPY package.json package-lock.json ./
 RUN npm ci
+
 COPY . .
+
+# Build the React app
+ARG REACT_APP_BACKEND_URL=http://localhost:8082
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 RUN npm run build
 
-# ---------- Runtime stage ----------
-FROM nginx:alpine
+# ---------- Stage 2: Production ----------
+FROM node:22-alpine
+WORKDIR /app
 
-COPY --from=build /app/build /usr/share/nginx/html
+# Install serve to run the built React app
+RUN npm install -g serve
 
-EXPOSE 80
+# Copy built files from builder stage
+COPY --from=builder /app/build ./build
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3000
+
+# Start the production server
+CMD ["serve", "-s", "build", "-l", "3000"]

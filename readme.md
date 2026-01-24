@@ -1,46 +1,102 @@
 # Task Management Application
 
-This repository contains a simple Task Management Application with a Node/Express backend and a React frontend.
+Task Management Application with Node/Express backend and React frontend, containerized with Docker and Kubernetes.
 
-## Prerequisites ✅
+## What Each File Does
 
-- Node.js v22.14.0 (or compatible Node 22.x)
-- npm (bundled with Node)
-- Docker & Docker Compose (optional, for containerized run)
+### Dockerfiles
+
+**Backend/Dockerfile** - Builds the backend container:
+- Installs production dependencies
+- Copies backend code
+- Runs on port 8082
+- Creates data directory for SQLite database
+
+**Frontend/Dockerfile** - Builds the frontend container:
+- Builds React app for production
+- Serves static files using `serve`
+- Runs on port 3000
+- Connects to backend at localhost:8082
+
+### docker-compose.yaml
+
+Defines how to run both containers together:
+- Backend service on port 8082
+- Frontend service on port 3000
+- Shared network for communication
+- Volume for backend data storage
+
+### Jenkinsfile
+
+Automates building and deploying:
+- Checks out code from repository
+- Builds Docker images with version tags
+- Pushes images to Docker Hub
+- Deploys to Kubernetes and updates running containers
+
+### Kubernetes Files (k8s/)
+
+**namespace.yaml** - Creates a separate space called "task-management" for the app
+
+**deployment.yaml** - Defines how to run the app:
+- Creates 2 copies (replicas) for availability
+- Each copy has 2 containers: frontend and backend
+- Sets memory and CPU limits
+- Configures environment variables
+
+**service.yaml** - Makes the app accessible:
+- Exposes frontend on port 30080
+- Exposes backend on port 30082
+- Load balances traffic between the 2 copies
+
+## Docker Setup
 
 
-## Run locally (recommended)
+### Check Status
 
-### 1) Start the backend
+```bash
+kubectl get pods -n task-management
+kubectl get service -n task-management
+kubectl get deployment -n task-management
 
-1. Open a terminal and go to the `Backend` folder:
+kubectl get all -n task-management
+```
+
+### Access Application
+
+### Update Deployment
+
+```bash
+kubectl set image deployment/task-management-app \
+  backend=someone15me/dp:backend-latest \
+  frontend=someone15me/dp:frontend-latest \
+  -n task-management
+```
+
+### Delete Everything
+
+```bash
+kubectl delete -f k8s/
+```
+
+## Local Development
+
+### Backend
 
 ```bash
 cd Backend
-```
-
-2. Install dependencies and start the server:
-
-```bash
 npm install
 npm start
 ```
 
-3. The backend listens on port 8082 by default. Verify the server is up:
+Backend runs on http://localhost:8082
 
-```bash
-curl http://localhost:8082/health
-```
+### Frontend
 
-### 2) Start the frontend
-
-1. Create a `.env` file in the `Frontend` folder and add the backend URL:
-
+Create `Frontend/.env`:
 ```
 REACT_APP_BACKEND_URL=http://localhost:8082
 ```
-
-2. Install dependencies and start the dev server:
 
 ```bash
 cd Frontend
@@ -48,105 +104,131 @@ npm install
 npm start
 ```
 
-3. The React app runs by default on http://localhost:3000
-
-
-## Run with Docker 🐳
-
-From the repository root you can build and run both services using Docker Compose:
-
-```bash
-docker-compose up --build
-```
-
-This will expose the backend on port `8082` and the frontend on port `3000` as configured in `docker-compose.yaml`.
-
-
-## Tests & scripts
-
-- Backend smoke test:
-- Run the following command only after starting the backend server.
-
-```bash
-cd Backend
-npm run smoke-test
-```
+Frontend runs on http://localhost:3000
 
 
 ---
 
-# Note!
-
-- Start the backend first, then start the frontend (the frontend needs the backend URL to be set).
-- To stop local servers, press `Ctrl+C` in each terminal.
-
-
-
-# For K8S
-
-### **Step 1: Switch to Minikube’s Docker**
-
-Run this **in the same terminal** before building images:
+## 🐳 Step 1: Install Docker
 
 ```bash
-eval $(minikube docker-env)
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
 ```
 
-This makes your `docker build` commands build images **inside Minikube**, so Kubernetes can use them directly.
-
-You can check:
+Add Jenkins user to Docker group:
 
 ```bash
-docker info | grep "Docker Root Dir"
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
 ```
 
-It should point to a Minikube path, not your host Docker.
+Reboot recommended.
 
 ---
 
-### **Step 2: Rebuild the Images**
+## 🕸️ Step 2: Install Minikube & kubectl
 
 ```bash
-docker build -t be:latest ./Backend
-docker build -t fe:latest ./Frontend
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
 ```
-
-Check they exist:
 
 ```bash
-docker images
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install kubectl /usr/local/bin/kubectl
 ```
 
-You should see `be:latest` and `fe:latest` **without needing `minikube image load`**.
+
+## 🎯 Step 3: Install and Set up Jenkins
+
+```bash
+sudo apt update
+sudo apt install fontconfig openjdk-21-jre
+java -version
+```
+
+```bash
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins
+```
+
+### Start Jenkins
+- You can enable the Jenkins service to start at boot with the command:
+```bash
+sudo systemctl enable jenkins
+```
+- You can start the Jenkins service with the command:
+
+```bash
+sudo systemctl start jenkins
+```
+- You can check the status of the Jenkins service using the command:
+
+```bash
+sudo systemctl status jenkins
+```
+
+## ⭐ CRITICAL STEP
+
+
+Run:
+
+```bash
+kubectl config view --raw --flatten > kubeconfig-inline.yaml
+```
+
+### What this does
+
+* Embeds certs as base64
+* Removes references to `/home/<user>/.minikube`
+* Makes kubeconfig portable and CI-safe
+
+✅ This is the file Jenkins will use.
+
+
+## 🧩 Configure Jenkins Credentials
+
+In Jenkins UI:
+
+```
+Manage Jenkins
+→ Credentials
+→ (Global)
+→ Add Credentials
+```
+
+* **Kind:** Secret file
+* **ID:** `kubeconfig`
+* **File:** `kubeconfig.yaml`
+* **Description:** Kubernetes config (inline certs)
+
+Save.
 
 ---
 
-### **Step 3: Delete old pods and redeploy**
+## 🔑 Docker Hub Credentials
 
-```bash
-kubectl delete deployment task-app
-kubectl delete svc task-app-service
-kubectl apply -f app-pod.yaml
-kubectl apply -f service.yaml
-```
+Add Docker Hub credentials in Jenkins:
 
-Check pods:
-
-```bash
-kubectl get pods -o wide
-```
+* **Kind:** Username with password
+* **ID:** `dockerhub-creds`
+* **Username:** your Docker Hub username
+* **Password:** Docker Hub access token (recommended)
 
 ---
 
-### **Step 4: Access the service**
+## Check logs of the buid
+
+If Jenkins can run:
 
 ```bash
-minikube ip
+kubectl get all -n task-management
 ```
-
-Suppose it returns `192.168.49.2`. Your NodePort is `30081`, so:
-
-```bash
-curl http://192.168.49.2:30081
-```
-## You'll see the Application Working
