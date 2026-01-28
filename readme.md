@@ -96,6 +96,40 @@ sudo systemctl start jenkins
 sudo systemctl status jenkins
 ```
 
+## Create CI/CD pipeline in Jenkins
+
+### 1. Log In to Jenkins
+
+<img width="1273" height="675" alt="image" src="https://github.com/user-attachments/assets/dcfdd8cf-7deb-4a2a-bdc8-48221b2a9cae" />
+
+### 2. Redirected to the Jenkins Dashboard
+
+When you logged in, you will be redirected to the Jenkins console or dashboard.
+
+### 3. Create a New Project
+
+<img width="1267" height="677" alt="image" src="https://github.com/user-attachments/assets/b0d53ca9-a007-4e89-b1e8-805b9b40c95e" />
+
+### 4. Configure the Project Type
+
+<img width="1268" height="679" alt="image" src="https://github.com/user-attachments/assets/3a52a946-c8ac-49fb-9275-f534c8d30669" />
+
+### 5. Configure the General Section
+
+<img width="1273" height="672" alt="image" src="https://github.com/user-attachments/assets/6b534809-d8ac-413f-8418-dc4fc37f17f8" />
+
+### 6. Set Build Triggers
+
+<img width="1272" height="672" alt="image" src="https://github.com/user-attachments/assets/f77dbea6-3989-40fd-954d-952626c04633" />
+
+### 7. Configure the Pipeline Section
+
+<img width="1272" height="677" alt="image" src="https://github.com/user-attachments/assets/ad7ddfe7-c79b-44f7-ba16-a7181340f60d" />
+
+### 8. Save the Pipeline 
+
+<img width="1272" height="676" alt="image" src="https://github.com/user-attachments/assets/8620ae11-0de4-48d2-8af8-46cf1a0f7468" />
+
 ---
 
 ## ⭐ CRITICAL STEP
