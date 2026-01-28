@@ -91,11 +91,39 @@ sudo systemctl restart jenkins
 ### Start Jenkins
 
 ```bash
+sudo apt install -y kubectl
 sudo systemctl enable jenkins
 sudo systemctl start jenkins
-sudo systemctl status jenkins
 ```
 
+## Increase Jenkins stability (recommended)
+
+Edit:
+
+```bash 
+sudo nano /etc/default/jenkins 
+```
+
+
+Add:
+
+```bash 
+JAVA_ARGS="-Djenkins.install.runSetupWizard=false -Xms512m -Xmx2048m" 
+```
+
+Restart:
+
+```bash 
+sudo systemctl restart jenkins 
+```
+
+## Fix kubectl context
+```bash 
+kubectl config use-context minikube
+kubectl get nodes
+kubectl create namespace task-management
+
+```
 ---
 
 ## ⭐ CRITICAL STEP
