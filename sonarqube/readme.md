@@ -1,56 +1,99 @@
-1️⃣ Kernel Tuning (MANDATORY for SonarQube)
-sudo sysctl -w vm.max_map_count=262144
-sudo sysctl -w fs.file-max=65536
+## **SonarQube Installation**
 
-Persist it:
+```bash
+docker run -itd --name sonarqube-server -p 9000:9000 sonarqube:lts-community
+```
 
-sudo nano /etc/sysctl.conf
+Access SonarQube via:  
+[SonarQube URL](http://<VM-IP>:9000)
 
-Add:
+**Monitor regularly:**
 
-vm.max_map_count=262144
-fs.file-max=65536
-
-Apply:
-
-sudo sysctl -p
-
-2️⃣ Create Docker Volumes
-docker volume create sonarqube_data
-docker volume create sonarqube_logs
-docker volume create sonarqube_extensions
-
-3️⃣ Run SonarQube Container
-docker run -d \
- --name sonarqube \
- --restart unless-stopped \
- -p 9000:9000 \
- -v sonarqube_data:/opt/sonarqube/data \
- -v sonarqube_logs:/opt/sonarqube/logs \
- -v sonarqube_extensions:/opt/sonarqube/extensions \
- sonarqube:lts
-
-Check:
-
-docker ps
-docker logs -f sonarqube
-
-4️⃣ Access Both Services
-Service URL
-Jenkins http://<VM-IP>:8080
-SonarQube http://<VM-IP>:9000
-5️⃣ Jenkins Configuration (IMPORTANT CHANGE)
-
-When Jenkins and SonarQube are on same VM:
-
-SonarQube Server URL in Jenkins
-http://localhost:9000
-
-✔ Faster
-✔ No firewall issues
-✔ Cleaner setup
-
-Monitor regularly:
-
+```bash
 htop
 docker stats
+```
+
+---
+
+### **Trivy Installation**
+
+**On bash:**
+
+```bash
+sudo apt update
+sudo apt-get install wget gnupg
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy
+```
+
+**Some Trivy Commands:**
+
+```bash
+trivy image <image name>
+trivy fs --security-checks vuln,config <folder name or path>
+```
+
+---
+
+### **Jenkins Plugins Installation**
+
+1. Go to Jenkins URL → `Manage Jenkins` → `Plugins` → `Available Plugins`
+2. Install the following plugins:
+   - SonarQube Scanner
+   - SonarQube Quality Gate
+   - OWASP Dependency Check
+   - Docker (Install all plugins)
+3. Reload Jenkins.
+
+---
+
+### **Jenkins and SonarQube Integration**
+
+1. In SonarQube UI → `Administration` → `Configurations` → `Webhook`
+   - Create a new webhook:
+     - **Name:** Any name
+     - **URL:** `Jenkins URL /sonarqube-webhook/`
+   - Click `Create`.
+
+2. In SonarQube UI → `Security` → `Users` → `Create Token`
+   - Generate and copy the token.
+
+---
+
+### **Jenkins Configuration**
+
+1. In Jenkins UI → `Manage Jenkins` → `Credentials` → `Global` → `Add Credentials`
+   - **Secret text:** Paste the token copied from SonarQube
+   - **ID:** `sonar`
+   - Click `Create`.
+
+2. In Jenkins UI → `Manage Jenkins` → `System` → `SonarQube Server`
+   - Add a new SonarQube server:
+     - **Name:** `sonar`
+     - **URL of SonarQube:** Enter SonarQube URL
+     - **Server Authentication Token:** Select `sonar` from credentials
+   - Click `Add`.
+
+---
+
+### **SonarQube Quality Gate Setup**
+
+1. In Jenkins UI → `Manage Jenkins` → `Tools` → `SonarQube Scanner Installations`
+   - Add a new SonarQube scanner:
+     - **Name:** `sonar`
+     - **Select any version**
+     - Click `Save`.
+
+---
+
+### **OWASP Dependency Check Setup**
+
+1. In Jenkins UI → `Manage Jenkins` → `Tools` → `Dependency Check`
+   - Add a new Dependency Check tool:
+     - **Name:** `owasp`
+     - **Install Automatically**
+     - Add installer → From `github.com` (latest version)
+   - Click `Save`.
