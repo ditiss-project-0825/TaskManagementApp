@@ -1,55 +1,22 @@
-# Task Management Application
+## Local Development
 
-This repository contains a simple Task Management Application with a Node/Express backend and a React frontend.
-
-> Quick note: these instructions work on macOS, Linux, and Windows (PowerShell).
-
-
-## Prerequisites ✅
-
-- Node.js v22.14.0 (or compatible Node 22.x)
-- npm (bundled with Node)
-- Docker & Docker Compose (optional, for containerized run)
-
-
-## Run locally (recommended)
-
-### 1) Start the backend
-
-1. Open a terminal and go to the `Backend` folder:
+### Backend
 
 ```bash
 cd Backend
-```
-
-2. Install dependencies and start the server:
-
-```bash
 npm install
 npm start
 ```
 
-3. The backend listens on port 8082 by default. Verify the server is up:
+Backend runs on [http://localhost:8082](http://localhost:8082)
 
-```
-GET http://localhost:8082/health
-```
+### Frontend
 
-> Optional `Backend/.env` variables:
-> - `SERVER_PORT` (default: `8082`)
-> - `FRONTEND_URL` (default: `*`)
-> - `SEED_DB` (set to `false` to skip inserting sample tasks)
-
-
-### 2) Start the frontend
-
-1. Create a `.env` file in the `Frontend` folder and add the backend URL:
+Create `Frontend/.env`:
 
 ```
 REACT_APP_BACKEND_URL=http://localhost:8082
 ```
-
-2. Install dependencies and start the dev server:
 
 ```bash
 cd Frontend
@@ -57,35 +24,132 @@ npm install
 npm start
 ```
 
-3. The React app runs by default on http://localhost:3000
-
-
-## Run with Docker (optional) 🐳
-
-From the repository root you can build and run both services using Docker Compose:
-
-```bash
-docker-compose up --build
-```
-
-This will expose the backend on port `8082` and the frontend on port `3000` as configured in `docker-compose.yaml`.
-
-
-## Tests & scripts
-
-- Backend smoke test:
-- Run the following command only after starting the backend server.
-
-```bash
-cd Backend
-npm run smoke-test
-```
-
+Frontend runs on [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## Notes
+## 🐳 Step 1: Install Docker
 
-- Start the backend first, then start the frontend (the frontend needs the backend URL to be set).
-- To stop local servers, press `Ctrl+C` in each terminal.
+```bash
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+```
 
+## Add current user to Docker group
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+docker ps
+```
+
+Reboot recommended.
+
+---
+
+## 🕸️ Step 2: Install Minikube & kubectl
+
+```bash
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install kubectl /usr/local/bin/kubectl
+```
+
+---
+
+## 🎯 Step 3: Install and Set up Jenkins
+
+```bash
+sudo apt update
+sudo apt install fontconfig openjdk-21-jre
+java -version
+```
+
+```bash
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins
+```
+
+## Add Jenkins user to Docker group
+
+```bash
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+```
+
+### Start Jenkins
+
+```bash
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+```
+
+---
+
+## ⭐ CRITICAL STEP
+
+```bash
+kubectl config view --raw --flatten > kubeconfig.yaml
+```
+
+### What this does
+
+* Embeds certs as base64
+* Removes references to `/home/<user>/.minikube`
+* Makes kubeconfig portable and CI-safe
+
+✅ This is the file Jenkins will use.
+
+---
+
+## 🧩 Configure Jenkins Credentials
+
+In Jenkins UI:
+
+```
+Manage Jenkins
+→ Credentials
+→ (Global)
+→ Add Credentials
+```
+
+* **Kind:** Secret file
+* **ID:** `kubeconfig`
+* **File:** `kubeconfig.yaml`
+* **Description:** Kubernetes config (inline certs)
+
+Save.
+
+---
+
+## 🔑 Docker Hub Credentials
+
+Add Docker Hub credentials in Jenkins:
+
+* **Kind:** Username with password
+* **ID:** `dockerhub-creds`
+* **Username:** your Docker Hub username
+* **Password:** Docker Hub access token (recommended)
+
+---
+
+### Check Status
+
+```bash
+kubectl get pods -n task-management
+kubectl get service -n task-management
+kubectl get deployment -n task-management
+kubectl get all -n task-management
+``
