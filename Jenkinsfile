@@ -59,8 +59,6 @@ pipeline {
                             frontend=${FRONTEND_IMAGE}-${BUILD_TAG} \
                             -n ${K8S_NAMESPACE}
                         kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${K8S_NAMESPACE}
-                        kubectl get svc -n ${K8S_NAMESPACE}
-                        kubectl get endpoints ${SERVICE_NAME} -n ${K8S_NAMESPACE}
                     """
                 }
             }
