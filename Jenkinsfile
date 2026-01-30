@@ -135,7 +135,7 @@ pipeline {
 
         stage('Verification') {
             steps {
-                sleep(time: 1, unit: 'MINUTES')
+                sleep(time: 1, unit: 'SECONDS')
                 withCredentials([
                     file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
                 ]) {
