@@ -75,12 +75,12 @@ pipeline {
                         fi
 
                         trivy image \
-                          --severity CRITICAL \
+                          --severity HIGH,CRITICAL \
                           --ignore-unfixed \
                           ${BACKEND_IMAGE}-${BUILD_TAG}
 
                         trivy image \
-                          --severity CRITICAL \
+                          --severity HIGH,CRITICAL \
                           --ignore-unfixed \
                           ${FRONTEND_IMAGE}-${BUILD_TAG}
                     """
