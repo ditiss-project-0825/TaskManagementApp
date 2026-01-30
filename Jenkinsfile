@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_IMAGE   = "someone15me/dp:backend"
-        FRONTEND_IMAGE  = "someone15me/dp:frontend"
-        DEPLOYMENT_NAME = "task-management-app"
-        K8S_NAMESPACE   = "task-management"
-        BUILD_TAG       = "${env.BUILD_NUMBER}-${GIT_COMMIT.substring(0,7)}"
+        BACKEND_IMAGE   = 'someone15me/dp:backend'
+        FRONTEND_IMAGE  = 'someone15me/dp:frontend'
+        DEPLOYMENT_NAME = 'task-management-app'
+        K8S_NAMESPACE   = 'task-management'
+        BUILD_TAG       = "${env.BUILD_NUMBER}-${GIT_COMMIT.substring(0, 7)}"
         NVD_API_KEY     = credentials('NVD_API_KEY')
     }
 
@@ -16,7 +16,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -151,14 +150,14 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment completed successfully"
+            echo '✅ Deployment completed successfully'
             echo "BUILD_TAG=${BUILD_TAG}"
         }
         unstable {
-            echo "⚠️ Deployment completed with security warnings"
+            echo '⚠️ Deployment completed with security warnings'
         }
         failure {
-            echo "❌ Pipeline failed (build, push, or deploy issue)"
+            echo '❌ Pipeline failed (build, push, or deploy issue)'
         }
     }
 }
