@@ -109,9 +109,9 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
+            // when {
+            //     expression { currentBuild.result == 'SUCCESS' }
+            // }
             steps {
                 withCredentials([
                     file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
