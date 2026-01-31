@@ -9,7 +9,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "devsecops" {
-  ami           = data.aws_ami.ubuntu.id
+  ami           = ami-019715e0d74f695be
   instance_type = var.instance_type
   key_name      = var.key_name
 
