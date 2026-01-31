@@ -1,10 +1,11 @@
-variable "my_ip" {
-  description = "Your public IP with /32"
+variable "security_group_id" {
+  description = "Existing security group ID"
   type        = string
 }
 
+
 variable "key_name" {
-  description = "Existing AWS key pair name"
+  description = "project"
   type        = string
 }
 
