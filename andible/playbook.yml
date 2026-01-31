@@ -1,11 +1,16 @@
 - hosts: jenkins
   become: yes
+  become_user: root
+  vars:
+    kubeconfig_dest: /home/ubuntu/kubeconfig.yaml
+
   tasks:
 
     - name: Update system
       apt:
         update_cache: yes
         upgrade: yes
+        autoremove: yes
 
     - name: Install base packages
       apt:
@@ -48,10 +53,12 @@
         https://pkg.jenkins.io/debian-stable binary/ \
         > /etc/apt/sources.list.d/jenkins.list
 
-        apt update
-        apt install -y jenkins
+        DEBIAN_FRONTEND=noninteractive apt update -y
+        DEBIAN_FRONTEND=noninteractive apt install -y jenkins
+      args:
+        executable: /bin/bash
 
-    - name: Start Jenkins
+    - name: Enable and start Jenkins
       systemd:
         name: jenkins
         enabled: yes
@@ -61,8 +68,71 @@
       shell: |
         curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
         install kubectl /usr/local/bin/
+      args:
+        executable: /bin/bash
 
     - name: Install Minikube
       shell: |
         curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
         install minikube-linux-amd64 /usr/local/bin/minikube
+      args:
+        executable: /bin/bash
+
+    - name: Print initial Jenkins admin password
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+
+    - name: Show Jenkins admin password
+      debug:
+        msg: "Jenkins initial admin password is: {{ jenkins_password.stdout }}"
+
+    - name: Start Minikube with 2GB memory (non-interactive)
+      shell: minikube start --memory=2048 --driver=docker
+      args:
+        executable: /bin/bash
+
+    - name: Add Jenkins user to Docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Update Jenkins Java args for stability
+      lineinfile:
+        path: /etc/default/jenkins
+        line: 'JAVA_ARGS="-Djenkins.install.runSetupWizard=false -Xms512m -Xmx2048m"'
+        create: yes
+
+    - name: Restart Jenkins
+      systemd:
+        name: jenkins
+        enabled: yes
+        state: restarted
+
+    - name: Set kubectl context to minikube
+      shell: kubectl config use-context minikube
+      args:
+        executable: /bin/bash
+
+    - name: Ensure Minikube nodes are up
+      shell: kubectl get nodes
+      args:
+        executable: /bin/bash
+
+    - name: Create namespace task-management
+      shell: kubectl create namespace task-management
+      ignore_errors: yes
+      args:
+        executable: /bin/bash
+
+    - name: Save kubeconfig to file
+      shell: kubectl config view --raw --flatten > {{ kubeconfig_dest }}
+      args:
+        creates: "{{ kubeconfig_dest }}"
+        executable: /bin/bash
+
+    - name: Download kubeconfig.yaml to local machine
+      fetch:
+        src: "{{ kubeconfig_dest }}"
+        dest: "./kubeconfig.yaml"
+        flat: yes
