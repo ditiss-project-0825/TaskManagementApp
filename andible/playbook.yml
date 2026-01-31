@@ -1,0 +1,68 @@
+- hosts: jenkins
+  become: yes
+  tasks:
+
+    - name: Update system
+      apt:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Install base packages
+      apt:
+        name:
+          - curl
+          - unzip
+          - ca-certificates
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Enable Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Add ubuntu to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Install Java 21
+      apt:
+        name: openjdk-21-jre
+        state: present
+
+    - name: Install Jenkins
+      shell: |
+        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key \
+        | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+        echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+        https://pkg.jenkins.io/debian-stable binary/ \
+        > /etc/apt/sources.list.d/jenkins.list
+
+        apt update
+        apt install -y jenkins
+
+    - name: Start Jenkins
+      systemd:
+        name: jenkins
+        enabled: yes
+        state: started
+
+    - name: Install kubectl
+      shell: |
+        curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+        install kubectl /usr/local/bin/
+
+    - name: Install Minikube
+      shell: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        install minikube-linux-amd64 /usr/local/bin/minikube
