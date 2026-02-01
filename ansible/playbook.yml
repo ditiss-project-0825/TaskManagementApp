@@ -22,7 +22,7 @@
           - lsb-release
         state: present
 
-    - name: Install Docker
+    - name: Install Docker    # Docker Installation
       apt:
         name: docker.io
         state: present
@@ -39,7 +39,7 @@
         groups: docker
         append: yes
 
-    - name: Install Java 21
+    - name: Install Java 21 # JDK Installation
       apt:
         name: openjdk-21-jre
         state: present
@@ -58,20 +58,20 @@
       args:
         executable: /bin/bash
 
-    - name: Enable and start Jenkins
+    - name: Enable and start Jenkins    # Jenkins Installation
       systemd:
         name: jenkins
         enabled: yes
         state: started
 
-    - name: Install kubectl
+    - name: Install kubectl # kubectl Installation
       shell: |
         curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
         install kubectl /usr/local/bin/
       args:
         executable: /bin/bash
 
-    - name: Install Minikube
+    - name: Install Minikube      # Minikube Installation
       shell: |
         curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
         install minikube-linux-amd64 /usr/local/bin/minikube
@@ -87,7 +87,7 @@
         msg: "Jenkins initial admin password is: {{ jenkins_password.stdout }}"
 
     - name: Start Minikube with 2GB memory (non-interactive)
-      shell: minikube start --memory=2048 --driver=docker
+      shell: minikube start --memory=2048 
       args:
         executable: /bin/bash
 
