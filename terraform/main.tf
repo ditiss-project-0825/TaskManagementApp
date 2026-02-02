@@ -14,7 +14,7 @@ resource "aws_instance" "devsecops" {
   key_name      = var.key_name
 
   vpc_security_group_ids = [
-    sg-09b27e01a0486c54b  
+    "sg-09b27e01a0486c54b"  
   ]
 
   root_block_device {
