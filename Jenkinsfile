@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_HOME = tool "sonar"
         PROJECT_NAME = 'tasklist-app'
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKERHUB_CREDENTIALS = credentials('docker-creds')
         DOCKER_HUB_REPO = "${DOCKERHUB_CREDENTIALS_USR}/${PROJECT_NAME}"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
