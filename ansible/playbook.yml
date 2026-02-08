@@ -106,27 +106,22 @@
     # -----------------------------
     # kubectl + Minikube
     # -----------------------------
+    - name: Download Minikube binary
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /tmp/minikube
+        mode: '0755'
+
     - name: Install Minikube
-      shell: |
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-        install -o root -g root -m 0755 minikube-linux-amd64 /usr/local/bin/minikube
+      command: install -o root -g root -m 0755 /tmp/minikube /usr/local/bin/minikube
       args:
-        executable: /bin/bash
         creates: /usr/local/bin/minikube
-        
-    - name: Install Minikube
-      shell: |
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-        install -o root -g root -m 0755 minikube-linux-amd64 /usr/local/bin/minikube
-      args:
-        executable: /bin/bash
-      creates: /usr/local/bin/minikube
 
     - name: Start Minikube as ubuntu user
       become: yes
       become_user: ubuntu
       shell: |
-        minikube start --driver=docker --memory=2048
+        minikube start --memory=2048
       args:
         executable: /bin/bash
 
