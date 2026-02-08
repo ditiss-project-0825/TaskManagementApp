@@ -1,11 +1,13 @@
 - hosts: jenkins
   become: yes
-  become_user: root
   vars:
     kubeconfig_dest: /home/ubuntu/kubeconfig.yaml
 
   tasks:
 
+    # -----------------------------
+    # System Prep
+    # -----------------------------
     - name: Update system
       apt:
         update_cache: yes
@@ -22,12 +24,15 @@
           - lsb-release
         state: present
 
-    - name: Install Docker    # Docker Installation
+    # -----------------------------
+    # Docker
+    # -----------------------------
+    - name: Install Docker
       apt:
         name: docker.io
         state: present
 
-    - name: Enable Docker
+    - name: Enable and start Docker
       systemd:
         name: docker
         enabled: yes
@@ -39,44 +44,45 @@
         groups: docker
         append: yes
 
-    - name: Install Java 21 # JDK Installation
+    - name: Add jenkins to docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Reset SSH connection to apply docker group
+      meta: reset_connection
+
+    # -----------------------------
+    # Java + Jenkins
+    # -----------------------------
+    - name: Install Java 21
       apt:
         name: openjdk-21-jre
         state: present
 
-    - name: Install Jenkins
+    - name: Add Jenkins repository
       shell: |
         curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key \
-        | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+          | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 
         echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-        https://pkg.jenkins.io/debian-stable binary/ \
-        > /etc/apt/sources.list.d/jenkins.list
-
-        DEBIAN_FRONTEND=noninteractive apt update -y
-        DEBIAN_FRONTEND=noninteractive apt install -y jenkins
+          https://pkg.jenkins.io/debian-stable binary/ \
+          > /etc/apt/sources.list.d/jenkins.list
       args:
         executable: /bin/bash
 
-    - name: Enable and start Jenkins    # Jenkins Installation
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        update_cache: yes
+        state: present
+
+    - name: Enable and start Jenkins
       systemd:
         name: jenkins
         enabled: yes
         state: started
-
-    - name: Install kubectl # kubectl Installation
-      shell: |
-        curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
-        install kubectl /usr/local/bin/
-      args:
-        executable: /bin/bash
-
-    - name: Install Minikube      # Minikube Installation
-      shell: |
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-        install minikube-linux-amd64 /usr/local/bin/minikube
-      args:
-        executable: /bin/bash
 
     - name: Print initial Jenkins admin password
       shell: cat /var/lib/jenkins/secrets/initialAdminPassword
@@ -86,46 +92,62 @@
       debug:
         msg: "Jenkins initial admin password is: {{ jenkins_password.stdout }}"
 
-    - name: Start Minikube with 2GB memory (non-interactive)
-      shell: minikube start --memory=2048 
-      args:
-        executable: /bin/bash
-
-    - name: Add Jenkins user to Docker group
-      user:
-        name: jenkins
-        groups: docker
-        append: yes
-
     - name: Update Jenkins Java args for stability
       lineinfile:
         path: /etc/default/jenkins
+        regexp: '^JAVA_ARGS='
         line: 'JAVA_ARGS="-Djenkins.install.runSetupWizard=false -Xms512m -Xmx2048m"'
-        create: yes
 
     - name: Restart Jenkins
       systemd:
         name: jenkins
-        enabled: yes
         state: restarted
 
+    # -----------------------------
+    # kubectl + Minikube
+    # -----------------------------
+    - name: Install kubectl
+      shell: |
+        curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      args:
+        executable: /bin/bash
+      creates: /usr/local/bin/kubectl
+
+    - name: Install Minikube
+      shell: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        install -o root -g root -m 0755 minikube-linux-amd64 /usr/local/bin/minikube
+      args:
+        executable: /bin/bash
+      creates: /usr/local/bin/minikube
+
+    - name: Start Minikube as ubuntu user
+      become: yes
+      become_user: ubuntu
+      shell: |
+        minikube start --driver=docker --memory=2048
+      args:
+        executable: /bin/bash
+
     - name: Set kubectl context to minikube
+      become: yes
+      become_user: ubuntu
       shell: kubectl config use-context minikube
       args:
         executable: /bin/bash
 
-    - name: Ensure Minikube nodes are up
-      shell: kubectl get nodes
-      args:
-        executable: /bin/bash
-
     - name: Create namespace task-management
+      become: yes
+      become_user: ubuntu
       shell: kubectl create namespace task-management
       ignore_errors: yes
       args:
         executable: /bin/bash
 
     - name: Save kubeconfig to file
+      become: yes
+      become_user: ubuntu
       shell: kubectl config view --raw --flatten > {{ kubeconfig_dest }}
       args:
         creates: "{{ kubeconfig_dest }}"
