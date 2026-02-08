@@ -156,5 +156,5 @@
     - name: Download kubeconfig.yaml to local machine
       fetch:
         src: "{{ kubeconfig_dest }}"
-        dest: "./kubeconfig.yaml"
+        dest: "~/kubeconfig.yaml"
         flat: yes
