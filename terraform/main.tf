@@ -88,7 +88,7 @@ resource "null_resource" "write_inventory" {
   provisioner "local-exec" {
     command = <<EOT
 echo "[jenkins]" > ../ansible/inventory.ini
-echo "${aws_instance.devsecops.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=/home/ad/one" >> ../ansible/inventory.ini
+echo "${aws_instance.devsecops.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/one" >> ../ansible/inventory.ini
 EOT
   }
 
