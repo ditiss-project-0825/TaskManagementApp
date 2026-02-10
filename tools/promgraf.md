@@ -20,7 +20,9 @@ install prometheus using below given two commands
 ```
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
-helm repo update
+helm repo update 
+
+helm install prometheus prometheus-community/prometheus
 ```
 to see all the pods and services run below given commands
 ```
